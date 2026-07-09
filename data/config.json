@@ -1,0 +1,48 @@
+{
+  "categories": {
+    "politics": {
+      "enabled": true,
+      "description": "Eleições, políticos, legislação"
+    },
+    "finance": {
+      "enabled": true,
+      "description": "Ações, criptos, IPOs, mercados"
+    },
+    "geopolitics": {
+      "enabled": true,
+      "description": "Conflitos, tensões internacionais"
+    },
+    "economy": {
+      "enabled": true,
+      "description": "Macro economia, Fed, inflação, commodities"
+    },
+    "elections": {
+      "enabled": true,
+      "description": "Eleições globais"
+    }
+  },
+  "threshold_alert": 3,
+  "collection_schedule": ["05:00", "11:00", "17:00", "23:00"],
+  "collection_timezone": "UTC",
+  "alert_run": "23:00",
+  "alert_comparison_window_hours": 24,
+  "alert_comparison_tolerance_hours": 3,
+  "days_history": 90,
+  "batch_size": 100,
+  "max_markets_per_category": 100,
+  "min_volume_usd": 1000,
+  "use_clob_midpoints": false,
+  "dashboard_url": "",
+  "email": {
+    "enabled": true,
+    "subject": "Polymarket Tracker - Alertas do Dia",
+    "send_after_alert_run": true,
+    "send_if_no_alerts": false
+  },
+  "dashboard": {
+    "enabled": true,
+    "refresh_interval": 3600,
+    "public": true,
+    "show_intraday": true
+  }
+}

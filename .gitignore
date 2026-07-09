@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+.pytest_cache/
+# O banco É commitado pelo GitHub Actions (é como o dashboard recebe dados).
+# Não ignorar data/polymarket.db.

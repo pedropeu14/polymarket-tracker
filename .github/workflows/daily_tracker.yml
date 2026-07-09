@@ -1,0 +1,46 @@
+name: Polymarket Tracker
+
+on:
+  schedule:
+    - cron: '0 5,11,17,23 * * *'   # 4x/dia: 05h, 11h, 17h, 23h UTC
+  workflow_dispatch:
+    inputs:
+      force_alerts:
+        description: 'Rodar alertas mesmo fora das 23h UTC'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: polymarket-tracker
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install requests
+
+      - name: Collect (and alert at 23h UTC)
+        run: python daily_job.py ${{ inputs.force_alerts && '--force-alerts' || '' }}
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+
+      - name: Commit updated data
+        run: |
+          git config user.name "tracker-bot"
+          git config user.email "bot@tracker"
+          git add data/polymarket.db
+          git commit -m "Data update $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes"
+          git pull --rebase origin ${{ github.ref_name }}
+          git push
