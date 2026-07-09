@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from countries import OTHER_LABEL, detect_country
 from database import TS_FORMAT, Database
 from alerts import detect_alerts, build_email_html, market_url
 from polymarket_api import PolymarketClient, _unwrap_list
@@ -80,6 +81,35 @@ class TestParsing(unittest.TestCase):
     def test_alert_hour_parsing(self):
         self.assertEqual(alert_hour_utc({"alert_run": "23:00"}), 23)
         self.assertEqual(alert_hour_utc({"alert_run": "bogus"}), 23)
+
+
+class TestCountryDetection(unittest.TestCase):
+    def test_us_by_institution_and_leader(self):
+        self.assertIn("Estados Unidos", detect_country(
+            "Will the Fed cut rates in September?"))
+        self.assertIn("Estados Unidos", detect_country(
+            "Will Trump sign the bill?"))
+        self.assertIn("Estados Unidos", detect_country(
+            "Will Oprah win the 2028 Democratic presidential nomination?"))
+
+    def test_case_sensitive_acronym_no_false_positive(self):
+        # "us" minúsculo (pronome) não pode virar Estados Unidos
+        self.assertEqual(detect_country("Will they let us know the result?"),
+                         OTHER_LABEL)
+
+    def test_alt_spellings(self):
+        self.assertIn("Ucrânia", detect_country(
+            "Will Volodymyr Zelenskyy be the next leader out?"))
+        self.assertIn("Turquia", detect_country(
+            "Will Recep Tayyip Erdoğan win the Nobel Peace Prize?"))
+
+    def test_priority_specific_before_us(self):
+        # conflito citando dois países -> vence o mais específico da lista
+        self.assertIn("Irã", detect_country("Will the US strike Iran in 2026?"))
+
+    def test_crypto_and_unknown(self):
+        self.assertIn("Cripto", detect_country("Bitcoin above $150k by Dec 31?"))
+        self.assertEqual(detect_country("Will it rain tomorrow?"), OTHER_LABEL)
 
 
 class TestDatabaseAndAlerts(unittest.TestCase):

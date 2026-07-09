@@ -12,6 +12,7 @@ from datetime import timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from countries import detect_country
 from database import Database, parse_ts
 from utils import get_logger
 
@@ -110,8 +111,10 @@ def build_email_html(alerts: dict, latest_ts: str, total_markets: int,
         for a in items:
             parts.append(
                 "<li><a href='{url}'>{question}</a><br>"
+                "<span style='color:#888'>{country}</span> · "
                 "Ontem: {yesterday:.1f}% → Hoje: {today:.1f}% "
-                "(<b>{delta_pp:+.1f} pp</b>) ⚠️</li>".format(**a))
+                "(<b>{delta_pp:+.1f} pp</b>) ⚠️</li>".format(
+                    country=detect_country(a["question"]), **a))
         parts.append("</ul>")
 
     if dashboard_url:

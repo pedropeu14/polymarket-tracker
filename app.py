@@ -6,6 +6,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from countries import OTHER_LABEL, detect_country
 from database import DEFAULT_DB_PATH, Database, parse_ts
 from utils import load_config
 
@@ -39,6 +40,7 @@ def load_data():
         df["prev_pct"] = df["market_id"].map(
             lambda m: previous.get(m, float("nan"))) * 100
         df["delta_pp"] = df["price_pct"] - df["prev_pct"]
+        df["country"] = df["question"].map(detect_country)
         return df, latest
     finally:
         db.close()
@@ -79,9 +81,13 @@ selected = st.multiselect(
     default=categories,
     format_func=lambda c: CATEGORY_LABELS.get(c, c.title()),
 )
+country_options = sorted(df["country"].unique())
+selected_countries = st.multiselect("Países", country_options,
+                                    default=country_options)
 search = st.text_input("Buscar mercado", "")
 
-view = df[df["category"].isin(selected)]
+view = df[df["category"].isin(selected)
+          & df["country"].isin(selected_countries)]
 if search:
     view = view[view["question"].str.contains(search, case=False, na=False)]
 
@@ -102,15 +108,30 @@ for category in selected:
     st.subheader(f"{CATEGORY_LABELS.get(category, category.title())} "
                  f"({len(cat_df)} mercados)")
 
-    table = cat_df[["question", "price_pct", "delta_pp", "volume"]].copy()
-    table.columns = ["Mercado", "Prob. (%)", "Δ 24h (pp)", "Volume (USD)"]
-    st.dataframe(
-        table.style.format({"Prob. (%)": "{:.1f}", "Δ 24h (pp)": "{:+.1f}",
-                            "Volume (USD)": "{:,.0f}"}, na_rep="—")
-        .map(lambda v: "color: #ff4b4b" if isinstance(v, float) and abs(v) > threshold
-             else "", subset=["Δ 24h (pp)"]),
-        use_container_width=True, hide_index=True,
-    )
+    # subgrupos por país; países com <3 mercados caem em "Global / Outros"
+    counts = cat_df["country"].value_counts()
+    small = counts[counts < 3].index
+    cat_df = cat_df.assign(
+        country_group=cat_df["country"].where(~cat_df["country"].isin(small),
+                                              OTHER_LABEL))
+    order = cat_df["country_group"].value_counts().index.tolist()
+    if OTHER_LABEL in order:
+        order.remove(OTHER_LABEL)
+        order.append(OTHER_LABEL)
+
+    for country in order:
+        sub = cat_df[cat_df["country_group"] == country]
+        st.markdown(f"**{country}** · {len(sub)} mercados")
+        table = sub[["question", "price_pct", "delta_pp", "volume"]].copy()
+        table.columns = ["Mercado", "Prob. (%)", "Δ 24h (pp)", "Volume (USD)"]
+        st.dataframe(
+            table.style.format({"Prob. (%)": "{:.1f}", "Δ 24h (pp)": "{:+.1f}",
+                                "Volume (USD)": "{:,.0f}"}, na_rep="—")
+            .map(lambda v: "color: #ff4b4b"
+                 if isinstance(v, float) and abs(v) > threshold else "",
+                 subset=["Δ 24h (pp)"]),
+            use_container_width=True, hide_index=True,
+        )
 
 # ---------------------------------------------------------------- histórico
 st.subheader("📈 Histórico de um mercado")
