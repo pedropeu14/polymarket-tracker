@@ -10,7 +10,8 @@ from countries import OTHER_LABEL, detect_country
 from database import DEFAULT_DB_PATH, Database, parse_ts
 from utils import load_config
 
-st.set_page_config(page_title="Polymarket Tracker", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Polymarket Tracker - Socinvest", page_icon="📊",
+                   layout="wide")
 
 CATEGORY_LABELS = {
     "politics": "🏛️ Politics",
@@ -59,7 +60,7 @@ config = load_config()
 threshold = float(config.get("threshold_alert", 3))
 df, latest_ts = load_data()
 
-st.title("📊 Polymarket Tracker")
+st.title("📊 Polymarket Tracker — Socinvest")
 
 if df.empty:
     # não deixar um resultado vazio preso no cache: a próxima visita

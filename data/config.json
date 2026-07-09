@@ -35,7 +35,7 @@
   "dashboard_url": "https://polymarket-tracker-aycoddt2tje9pkmpktmsfn.streamlit.app/",
   "email": {
     "enabled": true,
-    "subject": "Polymarket Tracker - Alertas do Dia",
+    "subject": "Polymarket Tracker Socinvest - Alertas do Dia",
     "send_after_alert_run": true,
     "send_if_no_alerts": false
   },
