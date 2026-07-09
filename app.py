@@ -60,6 +60,9 @@ df, latest_ts = load_data()
 st.title("📊 Polymarket Tracker")
 
 if df.empty:
+    # não deixar um resultado vazio preso no cache: a próxima visita
+    # depois da primeira coleta deve ler o banco de novo
+    load_data.clear()
     st.warning("Sem dados ainda — rode `python daily_job.py` ou aguarde a "
                "primeira coleta do GitHub Actions.")
     st.stop()
