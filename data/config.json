@@ -32,7 +32,7 @@
   "max_markets_per_category": 100,
   "min_volume_usd": 1000,
   "use_clob_midpoints": false,
-  "dashboard_url": "",
+  "dashboard_url": "https://polymarket-tracker-aycoddt2tje9pkmpktmsfn.streamlit.app/",
   "email": {
     "enabled": true,
     "subject": "Polymarket Tracker - Alertas do Dia",
