@@ -2,7 +2,10 @@ name: Polymarket Tracker
 
 on:
   schedule:
-    - cron: '0 5,11,17,23 * * *'   # 4x/dia: 05h, 11h, 17h, 23h UTC
+    - cron: '0 5,11,17 * * *'   # coletas intradiárias (05h, 11h, 17h UTC)
+    - cron: '0 23 * * *'        # coleta + alertas (23h UTC) — identificado
+                                # por github.event.schedule, não pelo relógio
+                                # (o cron do GitHub costuma atrasar 1-3h)
   workflow_dispatch:
     inputs:
       force_alerts:
@@ -29,8 +32,8 @@ jobs:
 
       - run: pip install requests
 
-      - name: Collect (and alert at 23h UTC)
-        run: python daily_job.py ${{ inputs.force_alerts && '--force-alerts' || '' }}
+      - name: Collect (and alert on the 23h UTC schedule)
+        run: python daily_job.py ${{ (github.event.schedule == '0 23 * * *' || inputs.force_alerts) && '--force-alerts' || '' }}
         env:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
