@@ -123,14 +123,24 @@ def build_email_html(alerts: dict, latest_ts: str, total_markets: int,
     return "\n".join(parts)
 
 
+def parse_recipients(raw: str) -> list:
+    """Aceita lista separada por vírgula ou ponto-e-vírgula."""
+    if not raw:
+        return []
+    return [addr.strip() for addr in raw.replace(";", ",").split(",")
+            if addr.strip()]
+
+
 def send_email(subject: str, html: str) -> bool:
     """Envia via SMTP usando EMAIL_USER / EMAIL_PASSWORD / EMAIL_RECIPIENT.
 
+    EMAIL_RECIPIENT aceita vários endereços separados por vírgula ou ";".
     Host/porta opcionais em SMTP_HOST / SMTP_PORT (default Gmail, SSL 465).
     """
     user = os.environ.get("EMAIL_USER")
     password = os.environ.get("EMAIL_PASSWORD")
-    recipient = os.environ.get("EMAIL_RECIPIENT", user)
+    recipients = parse_recipients(os.environ.get("EMAIL_RECIPIENT", "")) or (
+        [user] if user else [])
     host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
     port = int(os.environ.get("SMTP_PORT", "465"))
 
@@ -141,14 +151,14 @@ def send_email(subject: str, html: str) -> bool:
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = user
-    msg["To"] = recipient
+    msg["To"] = ", ".join(recipients)
     msg.attach(MIMEText(html, "html", "utf-8"))
 
     try:
         with smtplib.SMTP_SSL(host, port, timeout=30) as server:
             server.login(user, password)
-            server.sendmail(user, [recipient], msg.as_string())
-        logger.info("alert email sent to %s", recipient)
+            server.sendmail(user, recipients, msg.as_string())
+        logger.info("alert email sent to %d recipient(s)", len(recipients))
         return True
     except (smtplib.SMTPException, OSError) as exc:
         logger.error("email send failed: %s", exc)

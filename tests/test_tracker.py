@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from countries import OTHER_LABEL, detect_country
 from database import TS_FORMAT, Database
-from alerts import detect_alerts, build_email_html, market_url
+from alerts import detect_alerts, build_email_html, market_url, parse_recipients
 from polymarket_api import PolymarketClient, _unwrap_list
 from utils import parse_json_field, alert_hour_utc
 
@@ -180,6 +180,13 @@ class TestDatabaseAndAlerts(unittest.TestCase):
         self.assertIn("+8.0 pp", html)
         self.assertIn("ECONOMY", html)
         self.assertIn("x.streamlit.app", html)
+
+    def test_parse_recipients_comma_and_semicolon(self):
+        self.assertEqual(
+            parse_recipients("a@x.com; b@x.com , c@x.com;"),
+            ["a@x.com", "b@x.com", "c@x.com"])
+        self.assertEqual(parse_recipients(""), [])
+        self.assertEqual(parse_recipients(None), [])
 
     def test_market_url_prefers_event_slug(self):
         self.assertEqual(market_url({"event_slug": "ev", "slug": "mk"}),
